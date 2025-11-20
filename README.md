@@ -141,7 +141,3 @@ Progetto rilasciato sotto la licenza presente nel file `LICENSE`.
 ## Contatti
 
 Per domande o proposte: apri un'issue o contatta il maintainer principale nel repository GitHub.
-
----
-
-Se vuoi, posso adattare il README al linguaggio/framework effettivamente usato (es. Node.js/Express, FastAPI, Spring). Dimmi quale preferisci e aggiorno i comandi ed esempi.
