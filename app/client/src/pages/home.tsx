@@ -16,7 +16,7 @@ import type { Workspace, Channel, User } from "@shared/schema";
 
 export default function HomePage() {
   const [, setLocation] = useLocation();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated, isLoading } = useAuth();
   const [selectedWorkspaceId, setSelectedWorkspaceId] = useState<string | null>(null);
   const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
   const [selectedDmUserId, setSelectedDmUserId] = useState<string | null>(null);
@@ -40,10 +40,10 @@ export default function HomePage() {
   const selectedChannel = channels?.find(c => c.id === selectedChannelId) || null;
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       setLocation("/login");
     }
-  }, [isAuthenticated, setLocation]);
+  }, [isLoading, isAuthenticated, setLocation]);
 
   useEffect(() => {
     if (workspaces && workspaces.length > 0 && !selectedWorkspaceId) {
@@ -77,6 +77,10 @@ export default function HomePage() {
     logout();
     setLocation("/login");
   };
+
+  if (isLoading) {
+    return null;
+  }
 
   if (!isAuthenticated || !user) {
     return null;

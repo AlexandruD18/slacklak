@@ -10,8 +10,16 @@ import {
   type InsertMessage,
   type DirectMessage,
   type InsertDirectMessage,
+  users,
+  workspaces,
+  workspaceMembers,
+  channels,
+  messages,
+  directMessages,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
+import { db } from "./db";
+import { eq, and, or, like, desc, inArray } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -247,4 +255,224 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const avatarColors = ["#8B5CF6", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#EC4899"];
+    const avatarColor = avatarColors[Math.floor(Math.random() * avatarColors.length)];
+    
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...insertUser,
+        avatarColor,
+      })
+      .returning();
+    return user;
+  }
+
+  async updateUser(id: string, updates: Partial<User>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  // Workspace operations
+  async getWorkspace(id: string): Promise<Workspace | undefined> {
+    const [workspace] = await db.select().from(workspaces).where(eq(workspaces.id, id));
+    return workspace || undefined;
+  }
+
+  async getWorkspacesByUserId(userId: string): Promise<Workspace[]> {
+    const memberWorkspaces = await db
+      .select({ workspace: workspaces })
+      .from(workspaceMembers)
+      .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
+      .where(eq(workspaceMembers.userId, userId));
+
+    const ownedWorkspaces = await db
+      .select()
+      .from(workspaces)
+      .where(eq(workspaces.ownerId, userId));
+
+    const allWorkspaces = [...memberWorkspaces.map(w => w.workspace), ...ownedWorkspaces];
+    const uniqueWorkspaces = Array.from(
+      new Map(allWorkspaces.map(w => [w.id, w])).values()
+    );
+
+    return uniqueWorkspaces;
+  }
+
+  async createWorkspace(insertWorkspace: InsertWorkspace, ownerId: string): Promise<Workspace> {
+    return await db.transaction(async (tx) => {
+      const [workspace] = await tx
+        .insert(workspaces)
+        .values({
+          ...insertWorkspace,
+          ownerId,
+        })
+        .returning();
+
+      await tx
+        .insert(workspaceMembers)
+        .values({
+          workspaceId: workspace.id,
+          userId: ownerId,
+        });
+
+      return workspace;
+    });
+  }
+
+  async addWorkspaceMember(workspaceId: string, userId: string): Promise<WorkspaceMember> {
+    const [member] = await db
+      .insert(workspaceMembers)
+      .values({
+        workspaceId,
+        userId,
+      })
+      .returning();
+    return member;
+  }
+
+  async getWorkspaceMembers(workspaceId: string): Promise<User[]> {
+    const members = await db
+      .select({ user: users })
+      .from(workspaceMembers)
+      .innerJoin(users, eq(workspaceMembers.userId, users.id))
+      .where(eq(workspaceMembers.workspaceId, workspaceId));
+
+    return members.map(m => m.user);
+  }
+
+  // Channel operations
+  async getChannel(id: string): Promise<Channel | undefined> {
+    const [channel] = await db.select().from(channels).where(eq(channels.id, id));
+    return channel || undefined;
+  }
+
+  async getChannelsByWorkspaceId(workspaceId: string): Promise<Channel[]> {
+    return await db
+      .select()
+      .from(channels)
+      .where(eq(channels.workspaceId, workspaceId));
+  }
+
+  async createChannel(insertChannel: InsertChannel, createdBy: string): Promise<Channel> {
+    const [channel] = await db
+      .insert(channels)
+      .values({
+        ...insertChannel,
+        createdBy,
+      })
+      .returning();
+    return channel;
+  }
+
+  // Message operations
+  async getMessagesByChannelId(channelId: string): Promise<Array<Message & { user: User }>> {
+    const results = await db
+      .select({
+        message: messages,
+        user: users,
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.userId, users.id))
+      .where(eq(messages.channelId, channelId))
+      .orderBy(messages.createdAt);
+
+    return results.map(r => ({ ...r.message, user: r.user }));
+  }
+
+  async createMessage(insertMessage: InsertMessage, userId: string): Promise<Message> {
+    const [message] = await db
+      .insert(messages)
+      .values({
+        ...insertMessage,
+        userId,
+      })
+      .returning();
+    return message;
+  }
+
+  // Direct message operations
+  async getDirectMessages(userId1: string, userId2: string): Promise<Array<DirectMessage & { sender: User; receiver: User }>> {
+    const senderAlias = users;
+    const receiverAlias = { ...users, name: 'receiver' } as typeof users;
+    
+    const results = await db
+      .select({
+        dm: directMessages,
+        sender: senderAlias,
+        receiver: receiverAlias,
+      })
+      .from(directMessages)
+      .innerJoin(senderAlias, eq(directMessages.senderId, senderAlias.id))
+      .innerJoin(receiverAlias, eq(directMessages.receiverId, receiverAlias.id))
+      .where(
+        or(
+          and(eq(directMessages.senderId, userId1), eq(directMessages.receiverId, userId2)),
+          and(eq(directMessages.senderId, userId2), eq(directMessages.receiverId, userId1))
+        )
+      )
+      .orderBy(directMessages.createdAt);
+
+    return results.map(r => ({ ...r.dm, sender: r.sender, receiver: r.receiver }));
+  }
+
+  async createDirectMessage(insertDm: InsertDirectMessage, senderId: string): Promise<DirectMessage> {
+    const [dm] = await db
+      .insert(directMessages)
+      .values({
+        ...insertDm,
+        senderId,
+      })
+      .returning();
+    return dm;
+  }
+
+  // Search
+  async searchMessages(workspaceId: string, query: string): Promise<Array<Message & { user: User; channel: Channel }>> {
+    const workspaceChannels = await this.getChannelsByWorkspaceId(workspaceId);
+    const channelIds = workspaceChannels.map(c => c.id);
+
+    if (channelIds.length === 0) {
+      return [];
+    }
+
+    const results = await db
+      .select({
+        message: messages,
+        user: users,
+        channel: channels,
+      })
+      .from(messages)
+      .innerJoin(users, eq(messages.userId, users.id))
+      .innerJoin(channels, eq(messages.channelId, channels.id))
+      .where(
+        and(
+          inArray(messages.channelId, channelIds),
+          like(messages.content, `%${query}%`)
+        )
+      )
+      .orderBy(desc(messages.createdAt))
+      .limit(50);
+
+    return results.map(r => ({ ...r.message, user: r.user, channel: r.channel }));
+  }
+}
+
+export const storage = new DatabaseStorage();
