@@ -13,8 +13,7 @@ Slacklak è un progetto didattico/prototipale che implementa le funzionalità di
 
 Il repository contiene:
 
-- `back-end/` — codice e documentazione del server (API REST, WebSocket, modelli dati).
-- `front-end/` — interfaccia client (web).
+- `app/` — codice e documentazione del server (API REST, WebSocket, modelli dati) e interfaccia client (web).
 - `docs/` — documentazione di progetto e analisi tecnica/funzionale.
 
 ## Caratteristiche principali
