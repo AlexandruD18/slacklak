@@ -1,0 +1,58 @@
+Ruolo
+
+Agisci come un Senior Full Stack Engineer esperto in architetture scalabili, React, Node.js e PostgreSQL.
+
+Obiettivo
+
+Il tuo compito è creare un'applicazione "Slack Clone" completa, basata rigorosamente sui documenti allegati (PRD, Analisi Funzionale, Analisi Tecnica Back-end e Front-end).
+
+Stack Tecnologico
+
+Frontend: React (Vite), Tailwind CSS, Lucide React (per icone).
+
+Backend: Node.js con Express.
+
+Database: PostgreSQL (utilizza pg o sequelize/typeorm come ORM).
+
+Real-time: Socket.io (per la messaggistica).
+
+Configurazione Ambiente e Porte
+
+L'applicazione deve essere configurata per funzionare con le seguenti specifiche di rete:
+
+Frontend App: Deve girare sulla porta 8080.
+
+Backend API: Deve girare sulla porta 5000.
+
+Database: Configura la connessione a PostgreSQL.
+
+Requisiti di Avvio e Deploy
+
+È fondamentale generare i file di configurazione per l'ambiente di produzione fornito.
+Crea uno script di deploy o configura i file necessari (es. ecosystem.config.js per PM2 o un deploy.sh) utilizzando i seguenti dati target:
+
+Host: teamslack.lab.home.lucasacchi.net
+
+SSH User: teamslack
+
+SSH Password: teamslack123. (Nota: Nel codice usa variabili d'ambiente per la password, ma crea un file .env.example o uno script di setup che precompili questi dati per il deploy).
+
+Istruzioni Passo-Passo
+
+Analisi: Leggi attentamente i file allegati (PRD e Analisi) per comprendere le entità del database (Utenti, Canali, Messaggi, Workspace) e i flussi utente.
+
+Setup Database: Crea lo script schema.sql per PostgreSQL basato sull'analisi tecnica allegata.
+
+Backend: Inizializza il server Express sulla porta 5000. Implementa le API REST e il server Socket.io. Assicurati che CORS sia configurato per accettare richieste dalla porta 8080.
+
+Frontend: Inizializza l'app React (Vite) sulla porta 8080. Configura il proxy o il client API per puntare a localhost:5000.
+
+Configurazione Replit: Crea un file .replit corretto che avvii sia il backend che il frontend contemporaneamente (es. usando concurrently o definendo i run commands).
+
+Esempio run command: npm run dev (che lancia server e client).
+
+Deploy Script: Crea un file setup_deploy.sh che permetta di connettersi via SSH al server teamslack.lab.home.lucasacchi.net usando l'utente teamslack per aggiornare l'applicazione.
+
+Output Atteso
+
+Voglio un'applicazione funzionante che posso avviare cliccando "Run" su Replit, con la chat funzionante in tempo reale e la persistenza dei dati su Postgres.
