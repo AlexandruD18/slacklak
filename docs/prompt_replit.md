@@ -1,58 +1,47 @@
-Ruolo
+# Slack Clone - Prompt per Sviluppo
+
+## Ruolo
 
 Agisci come un Senior Full Stack Engineer esperto in architetture scalabili, React, Node.js e PostgreSQL.
 
-Obiettivo
+## Obiettivo
 
-Il tuo compito è creare un'applicazione "Slack Clone" completa, basata rigorosamente sui documenti allegati (PRD, Analisi Funzionale, Analisi Tecnica Back-end e Front-end).
+Creare un'applicazione "Slack Clone" completa, basata rigorosamente sui documenti allegati (PRD, Analisi Funzionale, Analisi Tecnica Back-end e Front-end).
 
-Stack Tecnologico
+## Stack Tecnologico
 
-Frontend: React (Vite), Tailwind CSS, Lucide React (per icone).
+**Frontend:** React (Vite), Tailwind CSS, Lucide React (per icone)  
+**Backend:** Node.js con Express  
+**Database:** PostgreSQL (usa pg o sequelize/typeorm come ORM)  
+**Real-time:** Socket.io (per la messaggistica)
 
-Backend: Node.js con Express.
+## Configurazione Ambiente e Porte
 
-Database: PostgreSQL (utilizza pg o sequelize/typeorm come ORM).
+- **Frontend App:** porta 8080
+- **Backend API:** porta 5000
+- **Database:** connessione a PostgreSQL configurata correttamente
 
-Real-time: Socket.io (per la messaggistica).
+## Requisiti di Avvio e Deploy
 
-Configurazione Ambiente e Porte
+- Generare file di configurazione per l'ambiente di produzione.
+- Creare script di deploy o file di configurazione (es. `ecosystem.config.js` per PM2 o `deploy.sh`).
 
-L'applicazione deve essere configurata per funzionare con le seguenti specifiche di rete:
+**Dati target:**
 
-Frontend App: Deve girare sulla porta 8080.
+- Host: `teamslack.***.****.**********.net`
+- SSH User: `*********`
+- SSH Password: `*************` (usa variabili d'ambiente, crea `.env.example` o script di setup)
 
-Backend API: Deve girare sulla porta 5000.
+## Istruzioni Passo-Passo
 
-Database: Configura la connessione a PostgreSQL.
+1. **Analisi:** leggere i file allegati per comprendere entità e flussi (Utenti, Canali, Messaggi, Workspace).
+2. **Setup Database:** creare `schema.sql` basato sull'analisi tecnica.
+3. **Backend:** inizializzare server Express sulla porta 5000, implementare API REST e Socket.io, configurare CORS per la porta 8080.
+4. **Frontend:** inizializzare app React (Vite) sulla porta 8080, configurare proxy o client API verso `localhost:5000`.
+5. **Configurazione Replit:** creare `.replit` per avviare backend e frontend insieme (es. con `concurrently`).
+   - Esempio run command: `npm run dev`
+6. **Deploy Script:** creare `setup_deploy.sh` per connettersi via SSH al server e aggiornare l'applicazione.
 
-Requisiti di Avvio e Deploy
+## Output Atteso
 
-È fondamentale generare i file di configurazione per l'ambiente di produzione fornito.
-Crea uno script di deploy o configura i file necessari (es. ecosystem.config.js per PM2 o un deploy.sh) utilizzando i seguenti dati target:
-
-Host: teamslack.lab.home.lucasacchi.net
-
-SSH User: teamslack
-
-SSH Password: teamslack123. (Nota: Nel codice usa variabili d'ambiente per la password, ma crea un file .env.example o uno script di setup che precompili questi dati per il deploy).
-
-Istruzioni Passo-Passo
-
-Analisi: Leggi attentamente i file allegati (PRD e Analisi) per comprendere le entità del database (Utenti, Canali, Messaggi, Workspace) e i flussi utente.
-
-Setup Database: Crea lo script schema.sql per PostgreSQL basato sull'analisi tecnica allegata.
-
-Backend: Inizializza il server Express sulla porta 5000. Implementa le API REST e il server Socket.io. Assicurati che CORS sia configurato per accettare richieste dalla porta 8080.
-
-Frontend: Inizializza l'app React (Vite) sulla porta 8080. Configura il proxy o il client API per puntare a localhost:5000.
-
-Configurazione Replit: Crea un file .replit corretto che avvii sia il backend che il frontend contemporaneamente (es. usando concurrently o definendo i run commands).
-
-Esempio run command: npm run dev (che lancia server e client).
-
-Deploy Script: Crea un file setup_deploy.sh che permetta di connettersi via SSH al server teamslack.lab.home.lucasacchi.net usando l'utente teamslack per aggiornare l'applicazione.
-
-Output Atteso
-
-Voglio un'applicazione funzionante che posso avviare cliccando "Run" su Replit, con la chat funzionante in tempo reale e la persistenza dei dati su Postgres.
+Applicazione funzionante, avviabile con "Run" su Replit, chat in tempo reale attiva e persistenza dei dati su PostgreSQL.
